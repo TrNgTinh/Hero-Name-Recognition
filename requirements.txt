@@ -1,0 +1,14 @@
+easydict==1.11
+fairscale==0.4.13
+faiss-cpu==1.7.4
+imgaug==0.4.0
+numpy
+opencv-python==4.8.1.78
+Pillow==9.4.0
+tensorboard==2.15.1
+timm==0.9.7
+torch==2.0.1
+torchvision==0.15.2
+xformers==0.0.22
+mxnet
+requests
