@@ -3,5 +3,6 @@ test_data/
 */__pycache__/*
 *.pt
 src/aug_Champions/
+*.pth
 # Jupyter Notebook
 *.ipynb_checkpoints*

@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 
 class ArcfaceInference:
-    def __init__(self, model_name='r50', model_weights_path='arcface_torch/work_dirs/ms1mv2_r50/model.pt'):
+    def __init__(self, model_name='r50', model_weights_path='src/arcface_torch/work_dirs/ms1mv2_r50/model.pt'):
         self.model = get_model(name=model_name)
         self.model.load_state_dict(torch.load(model_weights_path))
         self.model.eval()
@@ -29,4 +29,4 @@ class ArcfaceInference:
 
 if __name__ == "__main__":
     arcface_module = ArcfaceInference()
-    arcface_module.inference(img='../test_images/Katarina_167856652018987_round3_Annie_06-10-2021.mp4_15_1.jpg')
+    print(arcface_module.inference(img='./test_images/Katarina_167856652018987_round3_Annie_06-10-2021.mp4_15_1.jpg'))

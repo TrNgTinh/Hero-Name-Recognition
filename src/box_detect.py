@@ -75,8 +75,10 @@ def process_folder(input_folder, output_folder, circle_detect):
             except:
                 pass
 
-#circle_detect = CircleDetector()
-#input_folder = '../test_images/'
-#output_folder = 'Champions/'
-#process_folder(input_folder, output_folder, circle_detect)
+
+if __name__ == "__main__":
+    circle_detect = CircleDetector()
+    input_folder = './test_images/'
+    output_folder = './Data/Champions/'
+    process_folder(input_folder, output_folder, circle_detect)
 

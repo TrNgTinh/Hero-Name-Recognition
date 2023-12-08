@@ -11,7 +11,6 @@ def augment_images_in_folders(main_folder, output_folder, num_augmented_per_imag
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 
-    # Định nghĩa các phép biến đổi hình ảnh
     seq = iaa.Sequential([
         sometimes(
         iaa.Affine(rotate=(-25, 25)),  # Xoay ảnh trong khoảng -45 đến 45 độ
@@ -40,20 +39,19 @@ def augment_images_in_folders(main_folder, output_folder, num_augmented_per_imag
         iaa.Cutout(nb_iterations=2)
         ),
         sometimes(
-        iaa.Crop(percent=(0, 0.2)),  # Mất 1 góc của ảnh (tối đa 20%)
+        iaa.Crop(percent=(0, 0.2)),  
         ),
         sometimes(
-        iaa.Dropout(p=(0, 0.1)),  # Mất pixel với xác suất tối đa 10%
+        iaa.Dropout(p=(0, 0.1)),  
         ),
         sometimes(
-        iaa.AddToHueAndSaturation((-20, 20)),  # Thay đổi màu sắc
+        iaa.AddToHueAndSaturation((-20, 20)),  
         ),
         sometimes(
         iaa.GaussianBlur(sigma=(0, 3.0))
         ),
     ])
 
-    # Lặp qua tất cả các thư mục con trong thư mục chính
     for folder_name in os.listdir(main_folder):
         folder_path = os.path.join(main_folder, folder_name)
 
@@ -62,7 +60,7 @@ def augment_images_in_folders(main_folder, output_folder, num_augmented_per_imag
             # Lấy đường dẫn của ảnh trong thư mục con
             image_files = [f for f in os.listdir(folder_path) if f.endswith(('.png', '.jpg', '.jpeg'))]
 
-            # Nếu có ít nhất một ảnh, thì tiến hành tăng cường dữ liệu
+            
             for img in image_files:
                 image_filename = img
                 image_path = os.path.join(folder_path, image_filename)
@@ -71,27 +69,26 @@ def augment_images_in_folders(main_folder, output_folder, num_augmented_per_imag
                 ori_file = f"{os.path.splitext(image_filename)[0]}.png"
                 ori = os.path.join(output_folder, folder_name, ori_file)
                 cv2.imwrite(ori, img)
-                # Lặp qua số lượng biến đổi muốn áp dụng cho mỗi ảnh
+                
                 for i in range(num_augmented_per_image):
-                    # Áp dụng phép biến đổi và lưu ảnh mới
+                    
                     augmented_img = seq.augment_image(img)
                     new_filename = f"{os.path.splitext(image_filename)[0]}_augmented_{i+1}.png"
                     new_path = os.path.join(output_folder, folder_name, new_filename)
 
-                    # Tạo thư mục con nếu chưa tồn tại
+                    
                     if not os.path.exists(os.path.join(output_folder, folder_name)):
                         os.makedirs(os.path.join(output_folder, folder_name))
                         
                     cv2.imwrite(new_path, augmented_img)
 
-# Thư mục chính chứa các thư mục con a, b, c, d,...
-main_folder_path = "Champions"
+# Thư mục input
+main_folder_path = "./Data/Champions"
 
-# Thư mục để lưu ảnh tăng cường
-output_folder_path = "aug_Champions"
+# Thư mục output
+output_folder_path = "./Data/aug_Champions"
 
 # Số lượng ảnh tăng cường cho mỗi ảnh gốc
 num_augmented_per_image = 20
 
-# Gọi hàm để tăng cường dữ liệu
 augment_images_in_folders(main_folder_path, output_folder_path, num_augmented_per_image)

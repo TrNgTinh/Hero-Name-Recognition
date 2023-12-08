@@ -4,14 +4,12 @@ import numpy as np
 import faiss
 import os
 import cv2
-from clip import CLIPImageSimilarity
-from train_mobilenet import MobileNetV3Inference, ResNetInference
-
+import argparse
 
 def build_faiss_index(emb_model, path_folder):
-    # Get a list of all image files in the folder
-    image_files = [f for f in os.listdir(path_folder) if f.endswith(('.jpg', '.png', '.jpeg'))]
-    
+    # Get a list of all subdirectories in the folder
+    subdirectories = [d for d in os.listdir(path_folder) if os.path.isdir(os.path.join(path_folder, d))]
+
     # Initialize Faiss index
     index_dimension = 512  # Change this dimension based on your face embedding model
     index = faiss.IndexFlatIP(index_dimension)
@@ -20,15 +18,23 @@ def build_faiss_index(emb_model, path_folder):
     embeddings = []
     image_names = []
 
-    # Extract face embeddings and add to Faiss index
-    for image_file in image_files:
-        image_path = os.path.join(path_folder, image_file)
-        embedding = emb_model.inference(image_path)
-        faiss.normalize_L2(embedding)
-        index.add(embedding)
-        # Save face embedding and corresponding file name
-        embeddings.append(embedding)
-        image_names.append(image_file)
+    # Iterate through subdirectories
+    for subdirectory in subdirectories:
+        subdirectory_path = os.path.join(path_folder, subdirectory)
+        
+        # Get a list of all image files in the subdirectory
+        image_files = [f for f in os.listdir(subdirectory_path) if f.endswith(('.jpg', '.png', '.jpeg'))]
+
+        # Iterate through image files in the subdirectory
+        for image_file in image_files:
+            image_path = os.path.join(subdirectory_path, image_file)
+            embedding = emb_model.inference(image_path)
+            faiss.normalize_L2(embedding)
+            index.add(embedding)
+            
+            # Save face embedding and corresponding file name (using the subdirectory name)
+            embeddings.append(embedding)
+            image_names.append(subdirectory)
 
     # Convert the lists to NumPy arrays for Faiss
     face_embeddings = np.vstack(embeddings)
@@ -36,6 +42,7 @@ def build_faiss_index(emb_model, path_folder):
     # Save the image names and face embeddings for later reference
     index_info = {"image_names": image_names, "embeddings": embeddings}
     return index, index_info
+
     
 def relatedness_fn(index_build, query_embedding,  k=1):
         faiss.normalize_L2(query_embedding)
@@ -45,53 +52,36 @@ def relatedness_fn(index_build, query_embedding,  k=1):
         return D[0], I[0]
 
 
-'''
-mobile_net_infer =  ResNetInference()
-#cicle_detector = CircleDetector()
-#path_1 = ('../test_images/Amumu_142330807963265_round2_Amumu_06-14-2021.mp4_24_0.jpg')
-#img1 = cicle_detector.detect_circles(path_1)
-#cv2.imwrite('test.png',img1)
-print(mobile_net_infer.predict_single_image('./aug_Champions/Akali/Akali_augmented_1.png'))
+def main():
+    parser = argparse.ArgumentParser(description="Process images and calculate relatedness.")
+    parser.add_argument("--folder_path", default='./test_images', help="Path to the folder containing image files.")
+    args = parser.parse_args()
 
-clip = CLIPImageSimilarity()
+    circle_detector = CircleDetector()
+    face_emb = ArcfaceInference()
 
-index, index_info = build_faiss_index(clip, '../Champions/')
+    FaceBank = './Data/Champions/'  # Đặt đường dẫn đến thư mục chứa các tệp hình ảnh (có thể thay đổi)
 
-img1 = cicle_detector.detect_circles(path_1)
-cv2.imwrite('test.jpg',img1)
-emb1 = clip.calculate_emb(img1)
-cos, index = relatedness_fn(index, emb1)
-print(cos, index)
+    index, index_info = build_faiss_index(face_emb, FaceBank)
 
-print(index_info['image_names'][index[0]])
-print(index_info['image_names'][index[1]])
-print(index_info['image_names'][index[2]])
+    output_file = 'test.txt'  # Specify the name of the output text file
 
+    with open(output_file, 'w') as file:
+        for filename in os.listdir(args.folder_path):
+            if filename.endswith(('.jpg', '.jpeg', '.png')):  # Chọn chỉ các tệp hình ảnh
+                image_path = os.path.join(args.folder_path, filename)
 
-'''
-cicle_detector = CircleDetector()
-face_emb = ArcfaceInference()
+                # Thực hiện các bước xử lý cho mỗi hình ảnh trong thư mục
+                img1 = circle_detector.detect_circles(image_path)
+                emb1 = face_emb.inference(img1)
+                cos, ind = relatedness_fn(index, emb1)
 
-def distance(vector1,vector2):
-    sim = vector1 @ vector2.T
-    sim = sim / (np.linalg.norm(vector1) * np.linalg.norm(vector2))
-    return sim
-    
-folder_path = '../test_images'  # Đặt đường dẫn đến thư mục chứa các tệp hình ảnh
+                # Ghi kết quả vào file
+                result_line = f"{filename}\t{index_info['image_names'][ind[0]]}\n"
+                file.write(result_line)
 
-index, index_info = build_faiss_index(face_emb, '../Champions/')
+                # In kết quả (tùy chọn)
+                print(result_line.strip())
 
-for filename in os.listdir(folder_path):
-    if filename.endswith(('.jpg', '.jpeg', '.png')):  # Chọn chỉ các tệp hình ảnh
-        image_path = os.path.join(folder_path, filename)
-
-        # Thực hiện các bước xử lý cho mỗi hình ảnh trong thư mục
-        print(image_path)
-        img1 = cicle_detector.detect_circles(image_path)
-        emb1 = face_emb.inference(img1)
-        cos, ind = relatedness_fn(index, emb1)
-
-        # In kết quả
-        print(f"Image: {filename}, Cosine Similarity: {cos}, Related Image: {index_info['image_names'][ind[0]]}")
-
-
+if __name__ == "__main__":
+    main()
