@@ -18,7 +18,7 @@ for name in championNames:
     # download all the LOL champion images(png)
     url="http://ddragon.leagueoflegends.com/cdn/12.12.1/img/champion/" + name + ".png"
     reqs = requests.get(url)
-    path_root = "Champions//" 
+    path_root = "Champions/" +  name + "/"
     os.makedirs(path_root, exist_ok = True)
-    with open( path_root + name + ".png", "wb") as file:  # write and binary mode
+    with open( path_root + name +  ".png", "wb") as file:  # write and binary mode
         file.write(reqs.content) 

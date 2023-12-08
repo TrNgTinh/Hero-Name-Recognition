@@ -1,1 +1,7 @@
 test_data/
+#Cache
+*/__pycache__/*
+*.pt
+src/aug_Champions/
+# Jupyter Notebook
+*.ipynb_checkpoints*
